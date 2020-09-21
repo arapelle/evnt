@@ -13,7 +13,7 @@ namespace evnt
 {
 class event_info
 {
-    inline static std::size_t dynamic_type_index_()
+    inline static std::size_t generate_type_index_()
     {
         static std::atomic_size_t index = 0;
         return index++;
@@ -23,7 +23,7 @@ public:
     template <class event_type>
     inline static std::size_t type_index()
     {
-        static const std::size_t index = dynamic_type_index_();
+        static const std::size_t index = generate_type_index_();
         return index;
     }
 };
@@ -52,7 +52,7 @@ protected:
     }
 
     template <class event_type>
-    inline void disconnect_from_event(std::size_t connection);
+    inline void break_connection(std::size_t connection);
 
 private:
     friend event_manager;
@@ -83,7 +83,7 @@ public:
 
     template <class evt_type>
     requires std::is_same_v<evt_type, event_type>
-    inline void disconnect() { this->event_listener_base::template disconnect_from_event<event_type>(connection_); }
+    inline void disconnect() { this->event_listener_base::template break_connection<event_type>(connection_); }
 
     void disconnect_all() { disconnect<event_type>(); }
 
@@ -112,7 +112,7 @@ public:
 
     template <class evt_type>
     requires std::is_same_v<evt_type, event_type>
-    inline void disconnect() { this->event_listener<event_types...>::template disconnect_from_event<event_type>(connection_); }
+    inline void disconnect() { this->event_listener<event_types...>::template break_connection<event_type>(connection_); }
 
     void disconnect_all() { disconnect<event_type>(); this->event_listener<event_types...>::disconnect_all(); }
 
@@ -433,7 +433,7 @@ private:
 //////////
 
 template <class event_type>
-inline void event_listener_base::disconnect_from_event(std::size_t connection)
+inline void event_listener_base::break_connection(std::size_t connection)
 {
     event_manager* evt_manager = this->evt_manager();
     if (evt_manager)
