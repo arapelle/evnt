@@ -78,10 +78,14 @@ class event_listener<event_type> : public event_listener_base
 public:
     ~event_listener()
     {
-        disconnect();
+        disconnect<event_type>();
     }
 
+    template <class evt_type>
+    requires std::is_same_v<evt_type, event_type>
     inline void disconnect() { this->event_listener_base::template disconnect_from_event<event_type>(connection_); }
+
+    void disconnect_all() { disconnect<event_type>(); }
 
 protected:
     inline event_listener<event_type>* as_listener(const event_type*) { return this; }
@@ -103,10 +107,14 @@ class event_listener<event_type, event_types...> : public event_listener<event_t
 public:
     ~event_listener()
     {
-        disconnect();
+        disconnect<event_type>();
     }
 
+    template <class evt_type>
+    requires std::is_same_v<evt_type, event_type>
     inline void disconnect() { this->event_listener<event_types...>::template disconnect_from_event<event_type>(connection_); }
+
+    void disconnect_all() { disconnect<event_type>(); this->event_listener<event_types...>::disconnect_all(); }
 
 protected:
     using event_listener<event_types...>::as_listener;

@@ -91,7 +91,7 @@ void test_event_manager_3 ()
             event_manager.emit(evt);
             ASSERT_EQ(value, expected_value);
 
-            listener.disconnect();
+            listener.disconnect<Event>();
             ASSERT_EQ(value, expected_value);
         }
         ASSERT_EQ(value, expected_value * 10);
@@ -177,12 +177,63 @@ void test_event_manager_4 ()
     ASSERT_EQ(value_2, expected_value_2 + 100);
 }
 
+void test_event_manager_5 ()
+{
+    int value = 0;
+    int value_2 = 0;
+
+    {
+        event_manager event_manager;
+
+        {
+            Multi_event_listener listener(value, value_2);
+            event_manager.connect<Event>(listener);
+            event_manager.connect<Event_2>(listener);
+
+            Event event{ 5 };
+            event_manager.emit(event);
+            Event_2 event_2{ 7 };
+            event_manager.emit(event_2);
+            ASSERT_EQ(value, 6);
+            ASSERT_EQ(value_2, 9);
+
+            listener.disconnect<Event>();
+            event_manager.emit(Event{ 10 });
+            event_manager.emit(Event_2{ 10 });
+            ASSERT_EQ(value, 6);
+            ASSERT_EQ(value_2, 12);
+
+            event_manager.connect<Event>(listener);
+            event_manager.emit(Event{ 10 });
+            event_manager.emit(Event_2{ 20 });
+            ASSERT_EQ(value, 11);
+            ASSERT_EQ(value_2, 22);
+
+            listener.disconnect_all();
+            event_manager.emit(Event{ -10 });
+            event_manager.emit(Event_2{ -20 });
+            ASSERT_EQ(value, 11);
+            ASSERT_EQ(value_2, 22);
+        }
+        ASSERT_EQ(value, 111);
+        ASSERT_EQ(value_2, 122);
+
+        event_manager.emit(Event{ 20 });
+        event_manager.emit(Event_2{ 23 });
+        ASSERT_EQ(value, 111);
+        ASSERT_EQ(value_2, 122);
+    }
+    ASSERT_EQ(value, 111);
+    ASSERT_EQ(value_2, 122);
+}
+
 TEST(evnt_tests, legacy_tests)
 {
     test_event_manager();
     test_event_manager_2();
     test_event_manager_3();
     test_event_manager_4();
+    test_event_manager_5();
 }
 
 int main(int argc, char** argv)
