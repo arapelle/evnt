@@ -115,6 +115,12 @@ public:
     : value_ptr(&value), value_ptr_2(&value_2)
     {}
 
+    ~Multi_event_listener()
+    {
+        *value_ptr += 100;
+        *value_ptr_2 += 100;
+    }
+
     void receive (Event& event)
     {
         *value_ptr = event.value + 1;
@@ -131,23 +137,44 @@ public:
 
 void test_event_manager_4 ()
 {
-    event_manager event_manager;
     int value = 0;
     int value_2 = 0;
-    Multi_event_listener listener(value, value_2);
-    event_manager.connect<Event>(listener);
-    event_manager.connect<Event_2>(listener);
-
     int expected_value = 6;
-    Event event{ 5 };
-    event_manager.emit(event);
-
     int expected_value_2 = 9;
-    Event_2 event_2{ 7 };
-    event_manager.emit(event_2);
 
-    ASSERT_EQ(value, expected_value);
-    ASSERT_EQ(value_2, expected_value_2);
+    {
+        event_manager event_manager;
+
+        {
+            Multi_event_listener listener(value, value_2);
+            event_manager.connect<Event>(listener);
+            event_manager.connect<Event_2>(listener);
+
+            int expected_value = 6;
+            Event event{ 5 };
+            event_manager.emit(event);
+
+            int expected_value_2 = 9;
+            Event_2 event_2{ 7 };
+            event_manager.emit(event_2);
+
+            ASSERT_EQ(value, expected_value);
+            ASSERT_EQ(value_2, expected_value_2);
+        }
+        ASSERT_EQ(value, expected_value + 100);
+        ASSERT_EQ(value_2, expected_value_2 + 100);
+
+        Event event{ 10 };
+        event_manager.emit(event);
+
+        Event_2 event_2{ 13 };
+        event_manager.emit(event_2);
+
+        ASSERT_EQ(value, expected_value + 100);
+        ASSERT_EQ(value_2, expected_value_2 + 100);
+    }
+    ASSERT_EQ(value, expected_value + 100);
+    ASSERT_EQ(value_2, expected_value_2 + 100);
 }
 
 TEST(evnt_tests, legacy_tests)

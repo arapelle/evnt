@@ -37,12 +37,18 @@ class event_dispatcher;
 class event_listener_base
 {
 protected:
+    inline ~event_listener_base()
+    {
+        event_manager_ = nullptr;
+    }
+
     inline event_manager* evt_manager() { return event_manager_; }
 
     inline void invalidate()
     {
         assert(event_manager_);
-        event_manager_ = nullptr;
+        if (--counter_ == 0)
+            event_manager_ = nullptr;
     }
 
     template <class event_type>
@@ -55,9 +61,12 @@ private:
     {
         assert(!event_manager_ || event_manager_ == &evt_manager);
         event_manager_ = &evt_manager;
+        ++counter_;
     }
 
+private:
     event_manager* event_manager_ = nullptr;
+    std::atomic_uint16_t counter_ = 0;
 };
 
 template <class... event_types>
