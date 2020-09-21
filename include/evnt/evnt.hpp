@@ -2,8 +2,8 @@
 
 namespace evnt
 {
-class Event_manager;
-class Async_event_queue;
+class event_manager;
+class async_event_queue;
 class Event_dispatcher;
 }
 

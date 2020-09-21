@@ -7,7 +7,7 @@ TEST(evnt_tests, basic_test)
     ASSERT_EQ(module_name(), "evnt");
 }
 
-using Event_manager = evnt::Event_manager;
+using event_manager = evnt::event_manager;
 
 class Event
 {
@@ -17,7 +17,7 @@ public:
 
 void test_event_manager ()
 {
-    Event_manager event_manager;
+    event_manager event_manager;
     int value = 0;
     int expected_value = 5;
     event_manager.connect<Event>([&value](Event& event)
@@ -30,7 +30,7 @@ void test_event_manager ()
     ASSERT_EQ(value, expected_value);
 }
 
-class Event_Listener : public evnt::Event_listener<Event>
+class Event_Listener : public evnt::event_listener<Event>
 {
 public:
     Event_Listener (int& value)
@@ -57,7 +57,7 @@ void test_event_manager_2 ()
     int expected_value = 5;
 
     {
-        Event_manager event_manager;
+        event_manager event_manager;
 
         {
             Event_Listener listener(value);
@@ -81,7 +81,7 @@ void test_event_manager_3 ()
     int expected_value = 5;
 
     {
-        Event_manager event_manager;
+        event_manager event_manager;
 
         {
             Event_Listener listener(value);
@@ -108,7 +108,7 @@ public:
     int value;
 };
 
-class Multi_event_listener : public evnt::Event_listener<Event, Event_2>
+class Multi_event_listener : public evnt::event_listener<Event, Event_2>
 {
 public:
     Multi_event_listener (int& value, int& value_2)
@@ -131,7 +131,7 @@ public:
 
 void test_event_manager_4 ()
 {
-    Event_manager event_manager;
+    event_manager event_manager;
     int value = 0;
     int value_2 = 0;
     Multi_event_listener listener(value, value_2);

@@ -11,7 +11,7 @@
 
 namespace evnt
 {
-class Events
+class event_info
 {
     inline static std::size_t dynamic_type_index_()
     {
@@ -20,8 +20,8 @@ class Events
     }
 
 public:
-    template <class Event>
-    inline static std::size_t event_type_index()
+    template <class event_type>
+    inline static std::size_t type_index()
     {
         static const std::size_t index = dynamic_type_index_();
         return index;
@@ -30,57 +30,57 @@ public:
 
 //-------
 
-class Event_manager;
-class Async_event_queue;
-class Event_dispatcher;
+class event_manager;
+class async_event_queue;
+class event_dispatcher;
 
-class Event_listener_base
+class event_listener_base
 {
 protected:
-    inline Event_manager* event_manager () { return event_manager_; }
+    inline event_manager* evt_manager() { return event_manager_; }
 
-    inline void invalidate ()
+    inline void invalidate()
     {
         assert(event_manager_);
         event_manager_ = nullptr;
     }
 
-    template <class Event>
-    inline void disconnect_from_event (std::size_t connection);
+    template <class event_type>
+    inline void disconnect_from_event(std::size_t connection);
 
 private:
-    friend Event_manager;
+    friend event_manager;
 
-    inline void set_event_manager (Event_manager& event_manager)
+    inline void set_event_manager(event_manager& evt_manager)
     {
-        assert(!event_manager_ || event_manager_ == &event_manager);
-        event_manager_ = &event_manager;
+        assert(!event_manager_ || event_manager_ == &evt_manager);
+        event_manager_ = &evt_manager;
     }
 
-    Event_manager* event_manager_ = nullptr;
+    event_manager* event_manager_ = nullptr;
 };
 
-template <class... Events>
-class Event_listener;
+template <class... event_types>
+class event_listener;
 
-template <class Event>
-class Event_listener<Event> : public Event_listener_base
+template <class event_type>
+class event_listener<event_type> : public event_listener_base
 {
 public:
-    ~Event_listener ()
+    ~event_listener()
     {
         disconnect();
     }
 
-    inline void disconnect () { this->Event_listener_base::template disconnect_from_event<Event>(connection_); }
+    inline void disconnect() { this->event_listener_base::template disconnect_from_event<event_type>(connection_); }
 
 protected:
-    inline Event_listener<Event>* as_listener (const Event*) { return this; }
+    inline event_listener<event_type>* as_listener(const event_type*) { return this; }
 
 private:
-    friend Event_manager;
+    friend event_manager;
 
-    void set_connection (std::size_t connection)
+    void set_connection(std::size_t connection)
     {
         connection_ = connection;
     }
@@ -88,25 +88,25 @@ private:
     std::size_t connection_;
 };
 
-template <class Event, class... Events>
-class Event_listener<Event, Events...> : public Event_listener<Events...>
+template <class event_type, class... event_types>
+class event_listener<event_type, event_types...> : public event_listener<event_types...>
 {
 public:
-    ~Event_listener ()
+    ~event_listener()
     {
         disconnect();
     }
 
-    inline void disconnect () { this->Event_listener<Events...>::template disconnect_from_event<Event>(connection_); }
+    inline void disconnect() { this->event_listener<event_types...>::template disconnect_from_event<event_type>(connection_); }
 
 protected:
-    using Event_listener<Events...>::as_listener;
-    inline Event_listener<Event, Events...>* as_listener (const Event*) { return this; }
+    using event_listener<event_types...>::as_listener;
+    inline event_listener<event_type, event_types...>* as_listener(const event_type*) { return this; }
 
 private:
-    friend Event_manager;
+    friend event_manager;
 
-    void set_connection (std::size_t connection)
+    void set_connection(std::size_t connection)
     {
         connection_ = connection;
     }
@@ -114,197 +114,196 @@ private:
     std::size_t connection_;
 };
 
-class Event_manager
+class event_manager
 {
 private:
-    class Event_signal_interface
+    class event_signal_interface
     {
     public:
-        virtual ~Event_signal_interface () {}
+        virtual ~event_signal_interface() {}
     };
-    using Event_signal_interface_uptr = std::unique_ptr<Event_signal_interface>;
+    using event_signal_interface_uptr = std::unique_ptr<event_signal_interface>;
 
-    template <class Event>
-    class Event_signal : public Event_signal_interface
+    template <class event_type>
+    class event_signal : public event_signal_interface
     {
-        using Evt_signal = Signal<void (Event&)>;
+        using evt_signal = signal<void(event_type&)>;
 
     public:
-        using Function = typename Evt_signal::CbFunction;
+        using listener_function = typename evt_signal::CbFunction;
 
-        virtual ~Event_signal () {}
+        virtual ~event_signal() {}
 
-        template <class EvtListener>
-        void connect (EvtListener& listener)
+        template <class evt_listener>
+        void connect(evt_listener& listener)
         {
-            void (EvtListener::*receive)(Event &) = &EvtListener::receive;
-            Function function = std::bind(receive, &listener, std::placeholders::_1);
+            void(evt_listener::*receive)(event_type&) = &evt_listener::receive;
+            listener_function function = std::bind(receive, &listener, std::placeholders::_1);
             std::size_t connection = signal_.connect(std::move(function));
-            listener.as_listener(static_cast<const Event*>(nullptr))->set_connection(connection);
+            listener.as_listener(static_cast<const event_type*>(nullptr))->set_connection(connection);
         }
 
-        inline void connect (Function&& listener)
+        inline void connect(listener_function&& listener)
         {
             signal_.connect(listener);
         }
 
-        inline void disconnect (std::size_t connection)
+        inline void disconnect(std::size_t connection)
         {
             signal_.disconnect(connection);
         }
 
-        inline void emit (Event& event)
+        inline void emit(event_type& event)
         {
             signal_.emit(event);
         }
 
     private:
-         Evt_signal signal_;
+         evt_signal signal_;
     };
 
 public:
-    template <class Event>
-    using Receiver_function = typename Event_signal<Event>::Function;
+    template <class event_type>
+    using receiver_function = typename event_signal<event_type>::listener_function;
 
-    Event_manager () {}
+    event_manager() {}
 
-    Event_manager (const Event_manager&) = delete;
-    Event_manager& operator= (const Event_manager&) = delete;
+    event_manager(const event_manager&) = delete;
+    event_manager& operator=(const event_manager&) = delete;
 
-    ~Event_manager ();
+    ~event_manager();
 
-    template <class Event, class Receiver_>
-    inline void connect (Receiver_& listener)
+    template <class event_type, class receiver_type>
+    inline void connect(receiver_type& listener)
     {
-        get_or_create_event_signal<Event>().connect(listener);
+        get_or_create_event_signal_<event_type>().connect(listener);
         listener.set_event_manager(*this);
     }
 
-    template <class Event>
-    inline void connect (typename Event_signal<Event>::Function&& listener)
+    template <class event_type>
+    inline void connect(receiver_function<event_type>&& listener)
     {
-        get_or_create_event_signal<Event>().connect(std::move(listener));
+        get_or_create_event_signal_<event_type>().connect(std::move(listener));
     }
 
-    void connect (Event_dispatcher& dispatcher);
+    void connect(event_dispatcher& dispatcher);
 
-    template <class Event>
-    inline void disconnect (std::size_t connection)
+    template <class event_type>
+    inline void disconnect(std::size_t connection)
     {
-        event_signal<Event>().disconnect(connection);
+        event_signal_<event_type>().disconnect(connection);
     }
 
-    void disconnect (Event_dispatcher& dispatcher);
+    void disconnect(event_dispatcher& dispatcher);
 
 public:
-    template <class Event>
-    inline void emit (Event& event)
+    template <class event_type>
+    inline void emit(event_type& event)
     {
-        std::size_t index = Events::event_type_index<Event>();
+        std::size_t index = event_info::type_index<event_type>();
         if (index < event_signals_.size())
         {
-            Event_signal_interface_uptr& event_signal_uptr = event_signals_[index];
+            event_signal_interface_uptr& event_signal_uptr = event_signals_[index];
             if (event_signal_uptr)
-                static_cast<Event_signal<Event>*>(event_signal_uptr.get())->emit(event);
+                static_cast<event_signal<event_type>*>(event_signal_uptr.get())->emit(event);
         }
-        emit_to_dispatchers(event);
+        emit_to_dispatchers_(event);
     }
 
-    template <class Event>
-    inline void emit (Event&& event)
+    template <class event_type>
+    inline void emit(event_type&& event)
     {
-        Event evt = std::move(event);
-        emit<Event>(std::ref(evt));
+        event_type evt = std::move(event);
+        emit<event_type>(std::ref(evt));
     }
 
-    template <class Event>
-    inline void emit (std::vector<Event>& events)
+    template <class event_type>
+    inline void emit(std::vector<event_type>& events)
     {
-        std::size_t index = Events::event_type_index<Event>();
+        std::size_t index = event_info::type_index<event_type>();
         if (index < event_signals_.size())
         {
-            Event_signal_interface_uptr& event_signal_uptr = event_signals_[index];
+            event_signal_interface_uptr& event_signal_uptr = event_signals_[index];
             if (event_signal_uptr)
             {
-                Event_signal<Event>* event_signal = static_cast<Event_signal<Event>*>(event_signal_uptr.get());
-                for (Event& event : events)
-                    event_signal->emit(event);
+                event_signal<event_type>* e_signal = static_cast<event_signal<event_type>*>(event_signal_uptr.get());
+                for (event_type& event : events)
+                    e_signal->emit(event);
             }
         }
     }
 
-    void emit (Async_event_queue& event_queue);
+    void emit(async_event_queue& event_queue);
 
-    void reserve (std::size_t number_of_event_types);
+    void reserve(std::size_t number_of_event_types);
 
 private:
-    template <class Event>
-    inline Event_signal<Event>& event_signal ()
+    template <class event_type>
+    inline event_signal<event_type>& event_signal_()
     {
-        return *static_cast<Event_signal<Event>*>(event_signals_[Events::event_type_index<Event>()].get());
+        return *static_cast<event_signal<event_type>*>(event_signals_[event_info::type_index<event_type>()].get());
     }
 
-    template <class Event>
-    inline Event_signal<Event>& get_or_create_event_signal ()
+    template <class event_type>
+    inline event_signal<event_type>& get_or_create_event_signal_()
     {
-        std::size_t index = Events::event_type_index<Event>();
+        std::size_t index = event_info::type_index<event_type>();
         if (index >= event_signals_.size())
             event_signals_.resize(index + 1);
 
-        Event_signal_interface_uptr& event_signal_uptr = event_signals_[index];
+        event_signal_interface_uptr& event_signal_uptr = event_signals_[index];
         if (!event_signal_uptr)
         {
-            Event_signal_interface_uptr n_event = std::make_unique<Event_signal<Event>>();
+            event_signal_interface_uptr n_event = std::make_unique<event_signal<event_type>>();
             event_signal_uptr = std::move(n_event);
         }
 
-        return *static_cast<Event_signal<Event>*>(event_signal_uptr.get());
+        return *static_cast<event_signal<event_type>*>(event_signal_uptr.get());
     }
 
-    template <class Event>
-    void emit_to_dispatchers (Event& event);
+    template <class event_type>
+    void emit_to_dispatchers_(event_type& event);
 
-        std::vector<Event_signal_interface_uptr> event_signals_;
-    std::vector<Event_dispatcher*> event_dispatchers_;
+private:
+    std::vector<event_signal_interface_uptr> event_signals_;
+    std::vector<event_dispatcher*> event_dispatchers_;
     std::mutex mutex_;
 };
 
-class Async_event_queue
+class async_event_queue
 {
 private:
-    class Async_event_queue_interface
+    class async_event_queue_interface
     {
     public:
-        virtual ~Async_event_queue_interface ();
-        virtual void emit (Event_manager& event_manager) = 0;
-        virtual void sync () = 0;
+        virtual ~async_event_queue_interface();
+        virtual void emit(event_manager& evt_manager) = 0;
+        virtual void sync() = 0;
     };
-    using Async_event_queue_interface_uptr = std::unique_ptr<Async_event_queue_interface>;
+    using async_event_queue_interface_uptr = std::unique_ptr<async_event_queue_interface>;
 
-    template <class Event_>
-    class TAsync_event_queue : public Async_event_queue_interface
+    template <class event_type>
+    class tmpl_async_event_queue : public async_event_queue_interface
     {
     public:
-        using Event = Event_;
+        virtual ~tmpl_async_event_queue() {}
 
-        virtual ~TAsync_event_queue () {}
-
-        void reserve (std::size_t capacity)
+        void reserve(std::size_t capacity)
         {
             std::lock_guard<std::mutex> lock(mutex_);
             pending_events_.reserve(capacity);
         }
 
-        const std::vector<Event>& events () const { return events_; }
-        std::vector<Event>& events () { return events_; }
+        const std::vector<event_type>& events() const { return events_; }
+        std::vector<event_type>& events() { return events_; }
 
-        void push (Event&& event)
+        void push(event_type&& event)
         {
             std::lock_guard<std::mutex> lock(mutex_);
             pending_events_.push_back(std::move(event));
         }
 
-        virtual void sync () override
+        virtual void sync() override
         {
             std::lock_guard<std::mutex> lock(mutex_);
             events_.swap(pending_events_);
@@ -312,129 +311,129 @@ private:
             pending_events_.reserve(events_.capacity());
         }
 
-        virtual void emit (Event_manager& event_manager) override
+        virtual void emit(event_manager& evt_manager) override
         {
-            event_manager.emit(events());
+            evt_manager.emit(events());
         }
 
     private:
-        std::vector<Event> events_;
-        std::vector<Event> pending_events_;
+        std::vector<event_type> events_;
+        std::vector<event_type> pending_events_;
         std::mutex mutex_;
     };
 
 public:
-    template <class Event>
-    inline const std::vector<Event>& events ()
+    template <class event_type>
+    inline const std::vector<event_type>& events()
     {
-        return get_or_create_event_queue<Event>().events();
+        return get_or_create_event_queue<event_type>().events();
     }
 
-    template <class Event>
-    inline void push (Event&& event)
+    template <class event_type>
+    inline void push(event_type&& event)
     {
-        get_or_create_event_queue<Event>().push(std::move(event));
+        get_or_create_event_queue<event_type>().push(std::move(event));
     }
 
-    template <class Event>
-    void reserve (std::size_t capacity)
+    template <class event_type>
+    void reserve(std::size_t capacity)
     {
-        get_or_create_event_queue<Event>().reserve(capacity);
+        get_or_create_event_queue<event_type>().reserve(capacity);
     }
 
-    void sync ();
+    void sync();
 
 private:
-    friend class Event_manager;
+    friend class event_manager;
 
-    void emit (Event_manager& event_manager);
+    void emit(event_manager& evt_manager);
 
-    template <class Event>
-    inline TAsync_event_queue<Event>& get_or_create_event_queue ()
+    template <class event_type>
+    inline tmpl_async_event_queue<event_type>& get_or_create_event_queue()
     {
-        std::size_t index = Events::event_type_index<Event>();
+        std::size_t index = event_info::type_index<event_type>();
         if (index >= event_queues_.size())
             event_queues_.resize(index + 1);
 
-        Async_event_queue_interface_uptr& async_event_queue_uptr = event_queues_[index];
+        async_event_queue_interface_uptr& async_event_queue_uptr = event_queues_[index];
         if (!async_event_queue_uptr)
         {
-            Async_event_queue_interface_uptr n_queue = std::make_unique<TAsync_event_queue<Event>>();
+            async_event_queue_interface_uptr n_queue = std::make_unique<tmpl_async_event_queue<event_type>>();
             async_event_queue_uptr = std::move(n_queue);
         }
 
-        return *static_cast<TAsync_event_queue<Event>*>(async_event_queue_uptr.get());
+        return *static_cast<tmpl_async_event_queue<event_type>*>(async_event_queue_uptr.get());
     }
 
 private:
-    std::vector<Async_event_queue_interface_uptr> event_queues_;
+    std::vector<async_event_queue_interface_uptr> event_queues_;
 };
 
-class Event_dispatcher
+class event_dispatcher
 {
 public:
-    ~Event_dispatcher();
+    ~event_dispatcher();
 
-    template <class Event, class Receiver_>
-    inline void connect (Receiver_& listener)
+    template <class event_type, class receiver_type>
+    inline void connect(receiver_type& listener)
     {
-        event_manager_.connect<Event>(listener);
+        event_manager_.connect<event_type>(listener);
     }
 
-    template <class Event>
-    inline void connect (Event_manager::Receiver_function<Event>&& listener)
+    template <class event_type>
+    inline void connect(event_manager::receiver_function<event_type>&& listener)
     {
         event_manager_.connect(std::move(listener));
     }
 
-    template <class Event>
-    inline void disconnect (std::size_t connection)
+    template <class event_type>
+    inline void disconnect(std::size_t connection)
     {
-        event_manager_.disconnect<Event>(connection);
+        event_manager_.disconnect<event_type>(connection);
     }
 
-    void dispatch ();
+    void dispatch();
 
 private:
-    friend class Event_manager;
+    friend class event_manager;
 
-    void set_parent_event_manager (Event_manager& event_manager);
+    void set_parent_event_manager(event_manager& evt_manager);
 
-    void set_parent_event_manager (std::nullptr_t);
+    void set_parent_event_manager(std::nullptr_t);
 
-    template <class Event>
-    inline void push_event (Event& event)
+    template <class event_type>
+    inline void push_event(event_type& event)
     {
-        event_queue_.push(Event(event));
+        event_queue_.push(event_type(event));
     }
 
 private:
-    Event_manager* parent_event_manager_ = nullptr;
-    Async_event_queue event_queue_;
-    Event_manager event_manager_;
+    event_manager* parent_event_manager_ = nullptr;
+    async_event_queue event_queue_;
+    event_manager event_manager_;
 };
 
 //////////
 
-template <class Evt>
-inline void Event_listener_base::disconnect_from_event (std::size_t connection)
+template <class event_type>
+inline void event_listener_base::disconnect_from_event(std::size_t connection)
 {
-    Event_manager* event_manager = this->event_manager();
-    if (event_manager)
+    event_manager* evt_manager = this->evt_manager();
+    if (evt_manager)
     {
         this->invalidate();
-        event_manager->template disconnect<Evt>(connection);
+        evt_manager->template disconnect<event_type>(connection);
     }
 }
 
-template <class Event>
-void Event_manager::emit_to_dispatchers (Event& event)
+template <class event_type>
+void event_manager::emit_to_dispatchers_(event_type& event)
 {
     std::lock_guard lock(mutex_);
-    for (Event_dispatcher* dispatcher : event_dispatchers_)
+    for (event_dispatcher* dispatcher : event_dispatchers_)
     {
         assert(dispatcher);
-        dispatcher->push_event<Event>(event);
+        dispatcher->push_event<event_type>(event);
     }
 }
 

@@ -2,29 +2,29 @@
 
 namespace evnt
 {
-Event_manager::~Event_manager ()
+event_manager::~event_manager()
 {
     std::lock_guard lock(mutex_);
-    for (Event_dispatcher* dispatcher : event_dispatchers_)
+    for (event_dispatcher* dispatcher : event_dispatchers_)
     {
         assert(dispatcher);
         dispatcher->set_parent_event_manager(nullptr);
     }
 }
 
-void Event_manager::emit (Async_event_queue& event_queue)
+void event_manager::emit(async_event_queue& event_queue)
 {
     event_queue.emit(*this);
 }
 
-void Event_manager::connect (Event_dispatcher& dispatcher)
+void event_manager::connect(event_dispatcher& dispatcher)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     dispatcher.set_parent_event_manager(*this);
     event_dispatchers_.push_back(&dispatcher);
 }
 
-void Event_manager::disconnect (Event_dispatcher& dispatcher)
+void event_manager::disconnect(event_dispatcher& dispatcher)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     auto iter = std::find(event_dispatchers_.begin(), event_dispatchers_.end(), &dispatcher);
@@ -36,32 +36,32 @@ void Event_manager::disconnect (Event_dispatcher& dispatcher)
     }
 }
 
-void Event_manager::reserve (std::size_t number_of_event_types)
+void event_manager::reserve(std::size_t number_of_event_types)
 {
     event_signals_.reserve(number_of_event_types);
 }
 
 //////////
 
-Event_dispatcher::~Event_dispatcher()
+event_dispatcher::~event_dispatcher()
 {
     if (parent_event_manager_)
         parent_event_manager_->disconnect(*this);
 }
 
-void Event_dispatcher::dispatch ()
+void event_dispatcher::dispatch()
 {
     event_queue_.sync();
     event_manager_.emit(event_queue_);
 }
 
-void Event_dispatcher::set_parent_event_manager (Event_manager& event_manager)
+void event_dispatcher::set_parent_event_manager(event_manager& evt_manager)
 {
     assert(!parent_event_manager_);
-    parent_event_manager_ = &event_manager;
+    parent_event_manager_ = &evt_manager;
 }
 
-void Event_dispatcher::set_parent_event_manager (std::nullptr_t)
+void event_dispatcher::set_parent_event_manager(std::nullptr_t)
 {
     assert(parent_event_manager_);
     parent_event_manager_ = nullptr;
@@ -69,24 +69,24 @@ void Event_dispatcher::set_parent_event_manager (std::nullptr_t)
 
 //////////
 
-Async_event_queue::Async_event_queue_interface::~Async_event_queue_interface ()
+async_event_queue::async_event_queue_interface::~async_event_queue_interface()
 {
 }
 
 /////
 
-void Async_event_queue::sync ()
+void async_event_queue::sync()
 {
-    for (Async_event_queue_interface_uptr& event_queue : event_queues_)
+    for (async_event_queue_interface_uptr& event_queue : event_queues_)
         if (event_queue)
             event_queue->sync();
 }
 
-void Async_event_queue::emit (Event_manager& event_manager)
+void async_event_queue::emit(event_manager& evt_manager)
 {
-    for (const Async_event_queue_interface_uptr& event_queue : event_queues_)
+    for (const async_event_queue_interface_uptr& event_queue : event_queues_)
         if (event_queue)
-            event_queue->emit(event_manager);
+            event_queue->emit(evt_manager);
 }
 
 }

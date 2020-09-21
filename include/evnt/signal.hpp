@@ -6,7 +6,7 @@ namespace evnt
 {
 template <typename SignalSignature,
           class Collector = Simple::Lib::CollectorDefault<typename std::function<SignalSignature>::result_type> >
-using Signal = Simple::Signal<SignalSignature, Collector>;
+using signal = Simple::Signal<SignalSignature, Collector>;
 
 template <class Instance, class Class, class R, class... Args> std::function<R (Args...)>
 inline slot (Instance &object, R (Class::*method) (Args...)) { return Simple::slot(object, method); }
