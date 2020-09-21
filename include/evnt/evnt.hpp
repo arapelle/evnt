@@ -1,20 +1,29 @@
 #pragma once 
 
-namespace evnt
-{
-class event_manager;
-class async_event_queue;
-class Event_dispatcher;
-}
-
 #include "event_listener.hpp"
 #include "event_manager.hpp"
-#include "event_listener.inl"
 
 namespace evnt
 {
+template <class event_type>
+inline void event_listener_base::break_connection(std::size_t connection)
+{
+    event_manager* evt_manager = this->evt_manager();
+    if (evt_manager)
+    {
+        this->invalidate();
+        evt_manager->template disconnect<event_type>(connection);
+    }
 }
 
-#include <string>
-
-std::string module_name();
+template <class event_type>
+void event_manager::emit_to_dispatchers_(event_type& event)
+{
+    std::lock_guard lock(mutex_);
+    for (event_dispatcher* dispatcher : event_dispatchers_)
+    {
+        assert(dispatcher);
+        dispatcher->push_event<event_type>(event);
+    }
+}
+}
