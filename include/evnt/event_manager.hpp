@@ -1,5 +1,6 @@
 #pragma once
 
+#include "event_info.hpp"
 #include "signal.hpp"
 #include <memory>
 #include <atomic>
@@ -11,28 +12,11 @@
 
 namespace evnt
 {
-class event_info
-{
-    inline static std::size_t generate_type_index_()
-    {
-        static std::atomic_size_t index = 0;
-        return index++;
-    }
-
-public:
-    template <class event_type>
-    inline static std::size_t type_index()
-    {
-        static const std::size_t index = generate_type_index_();
-        return index;
-    }
-};
-
-//-------
-
 class event_manager;
 class async_event_queue;
 class event_dispatcher;
+
+// Event listeners:
 
 class event_listener_base
 {
@@ -130,6 +114,8 @@ private:
 
     std::size_t connection_;
 };
+
+// Event manager:
 
 class event_manager
 {
@@ -287,6 +273,8 @@ private:
     std::mutex mutex_;
 };
 
+// Asynchronous event queue:
+
 class async_event_queue
 {
 private:
@@ -386,6 +374,8 @@ private:
     std::vector<async_event_queue_interface_uptr> event_queues_;
 };
 
+// Event dispatcher:
+
 class event_dispatcher
 {
 public:
@@ -430,7 +420,7 @@ private:
     event_manager event_manager_;
 };
 
-//////////
+// Template method implementation:
 
 template <class event_type>
 inline void event_listener_base::break_connection(std::size_t connection)

@@ -32,6 +32,7 @@ library_build_options(${PROJECT_NAME} STATIC SHARED EXAMPLE TEST)
 
 # Headers:
 set(headers
+    include/evnt/event_info.hpp
     include/evnt/event_listener.hpp
     include/evnt/event_listener.inl
     include/evnt/event_manager.hpp

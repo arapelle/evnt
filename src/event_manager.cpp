@@ -2,6 +2,8 @@
 
 namespace evnt
 {
+// Event manager:
+
 event_manager::~event_manager()
 {
     std::lock_guard lock(mutex_);
@@ -41,7 +43,7 @@ void event_manager::reserve(std::size_t number_of_event_types)
     event_signals_.reserve(number_of_event_types);
 }
 
-//////////
+// Event manager:
 
 event_dispatcher::~event_dispatcher()
 {
