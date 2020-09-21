@@ -2,11 +2,6 @@
 #include <gtest/gtest.h>
 #include <cstdlib>
 
-TEST(evnt_tests, basic_test)
-{
-    ASSERT_EQ(module_name(), "evnt");
-}
-
 using event_manager = evnt::event_manager;
 
 class Event

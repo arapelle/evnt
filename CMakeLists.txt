@@ -43,7 +43,6 @@ set(headers
 
 # Sources:
 set(sources
-    src/evnt.cpp
     src/event_manager.cpp
 )
 
