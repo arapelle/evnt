@@ -16,8 +16,8 @@ set_build_type_if_undefined()
 
 project(evnt
         VERSION 0.1.0
-#        DESCRIPTION ""
-#        HOMEPAGE_URL ""
+        DESCRIPTION "A C++ library providing event managing tools."
+        HOMEPAGE_URL "https://github.com/arapelle/evnt"
         LANGUAGES CXX)
 
 message(STATUS "BUILD   : ${CMAKE_BUILD_TYPE}")
