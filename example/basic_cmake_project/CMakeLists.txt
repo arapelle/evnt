@@ -6,7 +6,7 @@ add_executable(${PROJECT_NAME} main.cpp)
 # Find package evnt:
 find_package(evnt 0.1.0 CONFIG REQUIRED)
 # Use evnt release shared target:
-target_link_libraries(${PROJECT_NAME} PRIVATE evnt)
+target_link_libraries(${PROJECT_NAME} PRIVATE arba::evnt)
 # Use evnt release static target:
-#target_link_libraries(${PROJECT_NAME} PRIVATE evnt-static)
+#target_link_libraries(${PROJECT_NAME} PRIVATE arba::evnt-static)
 
