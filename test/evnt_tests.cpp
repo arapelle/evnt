@@ -8,7 +8,7 @@ public:
     int value;
 };
 
-void test_event_manager()
+TEST(evnt_tests, test_event_manager)
 {
     evnt::event_manager event_manager;
     int value = 0;
@@ -44,7 +44,7 @@ public:
     int* value_ptr;
 };
 
-void test_event_manager_2()
+TEST(evnt_tests, test_event_manager_2)
 {
     int value = 0;
     int expected_value = 5;
@@ -68,7 +68,7 @@ void test_event_manager_2()
     ASSERT_EQ(value, expected_value * 10);
 }
 
-void test_event_manager_3()
+TEST(evnt_tests, test_event_manager_3)
 {
     int value = 0;
     int expected_value = 5;
@@ -128,7 +128,7 @@ public:
     int* value_ptr_2;
 };
 
-void test_event_manager_4()
+TEST(evnt_tests, test_event_manager_4)
 {
     int value = 0;
     int value_2 = 0;
@@ -170,7 +170,7 @@ void test_event_manager_4()
     ASSERT_EQ(value_2, expected_value_2 + 100);
 }
 
-void test_event_manager_5()
+TEST(evnt_tests, test_event_manager_5)
 {
     int value = 0;
     int value_2 = 0;
@@ -218,15 +218,6 @@ void test_event_manager_5()
     }
     ASSERT_EQ(value, 111);
     ASSERT_EQ(value_2, 122);
-}
-
-TEST(evnt_tests, legacy_tests)
-{
-    test_event_manager();
-    test_event_manager_2();
-    test_event_manager_3();
-    test_event_manager_4();
-    test_event_manager_5();
 }
 
 int main(int argc, char** argv)
