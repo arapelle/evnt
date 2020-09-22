@@ -3,7 +3,7 @@
 #include "event_listener.hpp"
 #include "event_manager.hpp"
 #include "async_event_queue.hpp"
-#include "event_dispatcher.hpp"
+#include "event_box.hpp"
 
 namespace evnt
 {
@@ -22,7 +22,7 @@ template <class event_type>
 void event_manager::emit_to_dispatchers_(event_type& event)
 {
     std::lock_guard lock(mutex_);
-    for (event_dispatcher* dispatcher : event_dispatchers_)
+    for (event_box* dispatcher : event_boxs_)
     {
         assert(dispatcher);
         dispatcher->push_event<event_type>(event);

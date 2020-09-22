@@ -4,10 +4,10 @@
 
 namespace evnt
 {
-class event_dispatcher
+class event_box
 {
 public:
-    ~event_dispatcher();
+    ~event_box();
 
     template <class event_type, class receiver_type>
     inline void connect(receiver_type& listener)
@@ -27,7 +27,7 @@ public:
         event_manager_.disconnect<event_type>(connection);
     }
 
-    void dispatch();
+    void emit_received_events();
 
 private:
     friend class event_manager;

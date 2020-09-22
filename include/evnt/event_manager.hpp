@@ -13,7 +13,7 @@
 
 namespace evnt
 {
-class event_dispatcher;
+class event_box;
 
 class event_manager
 {
@@ -89,7 +89,7 @@ public:
         get_or_create_event_signal_<event_type>().connect(std::move(listener));
     }
 
-    void connect(event_dispatcher& dispatcher);
+    void connect(event_box& dispatcher);
 
     template <class event_type>
     inline void disconnect(std::size_t connection)
@@ -99,7 +99,7 @@ public:
 
     // Disconnect:
 
-    void disconnect(event_dispatcher& dispatcher);
+    void disconnect(event_box& dispatcher);
 
     // Emit events:
 
@@ -168,7 +168,7 @@ private:
 
 private:
     std::vector<event_signal_interface_uptr> event_signals_;
-    std::vector<event_dispatcher*> event_dispatchers_;
+    std::vector<event_box*> event_boxs_;
     std::mutex mutex_;
 };
 }

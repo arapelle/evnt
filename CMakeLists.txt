@@ -36,7 +36,7 @@ set(headers
     include/evnt/event_listener.hpp
     include/evnt/event_manager.hpp
     include/evnt/async_event_queue.hpp
-    include/evnt/event_dispatcher.hpp
+    include/evnt/event_box.hpp
     include/evnt/signal.hpp
     include/evnt/priv/simple_signal.hpp
     include/evnt/evnt.hpp
@@ -46,7 +46,7 @@ set(headers
 set(sources
     src/event_manager.cpp
     src/async_event_queue.cpp
-    src/event_dispatcher.cpp
+    src/event_box.cpp
 )
 
 # Add C++ library
