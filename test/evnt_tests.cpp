@@ -8,19 +8,32 @@ public:
     int value;
 };
 
-TEST(evnt_tests, test_event_manager)
+TEST(event_manager_tests, test_emit_event_lvalue_reference)
 {
     evnt::event_manager event_manager;
     int value = 0;
-    int expected_value = 5;
     event_manager.connect<int_event>([&value](int_event& event)
     {
         value = event.value;
     });
 
-    int_event evt{ expected_value };
+    int_event evt{ 5 };
     event_manager.emit(evt);
-    ASSERT_EQ(value, expected_value);
+    ASSERT_EQ(value, 5);
+}
+
+TEST(event_manager_tests, test_emit_event_rvalue_reference)
+{
+    evnt::event_manager event_manager;
+    int value = 0;
+    event_manager.connect<int_event>([&value](int_event& event)
+    {
+        value = event.value;
+    });
+
+    int_event evt{ 5 };
+    event_manager.emit(evt);
+    ASSERT_EQ(value, 5);
 }
 
 class int_event_Listener : public evnt::event_listener<int_event>
@@ -44,10 +57,9 @@ public:
     int* value_ptr;
 };
 
-TEST(evnt_tests, test_event_manager_2)
+TEST(event_manager_tests, test_listener_auto_deconnection)
 {
     int value = 0;
-    int expected_value = 5;
 
     {
         evnt::event_manager event_manager;
@@ -56,22 +68,20 @@ TEST(evnt_tests, test_event_manager_2)
             int_event_Listener listener(value);
             event_manager.connect<int_event>(listener);
 
-            int_event evt{ expected_value };
-            event_manager.emit(evt);
-            ASSERT_EQ(value, expected_value);
+            event_manager.emit(int_event{ 5 });
+            ASSERT_EQ(value, 5);
         }
-        ASSERT_EQ(value, expected_value * 10);
+        ASSERT_EQ(value, 5 * 10);
 
-        event_manager.emit(int_event{expected_value * 20});
-        ASSERT_EQ(value, expected_value * 10);
+        event_manager.emit(int_event{ 200 });
+        ASSERT_EQ(value, 5 * 10);
     }
-    ASSERT_EQ(value, expected_value * 10);
+    ASSERT_EQ(value, 5 * 10);
 }
 
-TEST(evnt_tests, test_event_manager_3)
+TEST(event_manager_tests, test_listener_deconnection)
 {
     int value = 0;
-    int expected_value = 5;
 
     {
         evnt::event_manager event_manager;
@@ -80,19 +90,19 @@ TEST(evnt_tests, test_event_manager_3)
             int_event_Listener listener(value);
             event_manager.connect<int_event>(listener);
 
-            int_event evt{ expected_value };
-            event_manager.emit(evt);
-            ASSERT_EQ(value, expected_value);
+            event_manager.emit(int_event{ 5 });
+            ASSERT_EQ(value, 5);
 
             listener.disconnect<int_event>();
-            ASSERT_EQ(value, expected_value);
+            event_manager.emit(int_event{ 7 });
+            ASSERT_EQ(value, 5);
         }
-        ASSERT_EQ(value, expected_value * 10);
+        ASSERT_EQ(value, 5 * 10);
 
-        event_manager.emit(int_event{expected_value * 20});
-        ASSERT_EQ(value, expected_value * 10);
+        event_manager.emit(int_event{ 200 });
+        ASSERT_EQ(value, 5 * 10);
     }
-    ASSERT_EQ(value, expected_value * 10);
+    ASSERT_EQ(value, 5 * 10);
 }
 
 class int_event_2
@@ -128,12 +138,10 @@ public:
     int* value_ptr_2;
 };
 
-TEST(evnt_tests, test_event_manager_4)
+TEST(event_manager_tests, test_multi_listener_connection_and_auto_deconnection)
 {
     int value = 0;
     int value_2 = 0;
-    int expected_value = 6;
-    int expected_value_2 = 9;
 
     {
         evnt::event_manager event_manager;
@@ -143,34 +151,26 @@ TEST(evnt_tests, test_event_manager_4)
             event_manager.connect<int_event>(listener);
             event_manager.connect<int_event_2>(listener);
 
-            int expected_value = 6;
-            int_event event{ 5 };
-            event_manager.emit(event);
+            event_manager.emit(int_event{ 5 });
+            event_manager.emit(int_event_2{ 7 });
 
-            int expected_value_2 = 9;
-            int_event_2 event_2{ 7 };
-            event_manager.emit(event_2);
-
-            ASSERT_EQ(value, expected_value);
-            ASSERT_EQ(value_2, expected_value_2);
+            ASSERT_EQ(value, 6);
+            ASSERT_EQ(value_2, 9);
         }
-        ASSERT_EQ(value, expected_value + 100);
-        ASSERT_EQ(value_2, expected_value_2 + 100);
+        ASSERT_EQ(value, 6 + 100);
+        ASSERT_EQ(value_2, 9 + 100);
 
-        int_event event{ 10 };
-        event_manager.emit(event);
+        event_manager.emit(int_event{ 10 });
+        event_manager.emit(int_event_2{ 13 });
 
-        int_event_2 event_2{ 13 };
-        event_manager.emit(event_2);
-
-        ASSERT_EQ(value, expected_value + 100);
-        ASSERT_EQ(value_2, expected_value_2 + 100);
+        ASSERT_EQ(value, 6 + 100);
+        ASSERT_EQ(value_2, 9 + 100);
     }
-    ASSERT_EQ(value, expected_value + 100);
-    ASSERT_EQ(value_2, expected_value_2 + 100);
+    ASSERT_EQ(value, 6 + 100);
+    ASSERT_EQ(value_2, 9 + 100);
 }
 
-TEST(evnt_tests, test_event_manager_5)
+TEST(event_manager_tests, test_multi_listener_deconnections_and_reconnection)
 {
     int value = 0;
     int value_2 = 0;
@@ -183,10 +183,8 @@ TEST(evnt_tests, test_event_manager_5)
             event_manager.connect<int_event>(listener);
             event_manager.connect<int_event_2>(listener);
 
-            int_event event{ 5 };
-            event_manager.emit(event);
-            int_event_2 event_2{ 7 };
-            event_manager.emit(event_2);
+            event_manager.emit(int_event{ 5 });
+            event_manager.emit(int_event_2{ 7 });
             ASSERT_EQ(value, 6);
             ASSERT_EQ(value_2, 9);
 
