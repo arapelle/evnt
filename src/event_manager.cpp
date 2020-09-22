@@ -1,9 +1,8 @@
 #include <evnt/event_manager.hpp>
+#include <evnt/event_dispatcher.hpp>
 
 namespace evnt
 {
-// Event manager:
-
 event_manager::~event_manager()
 {
     std::lock_guard lock(mutex_);
@@ -42,53 +41,4 @@ void event_manager::reserve(std::size_t number_of_event_types)
 {
     event_signals_.reserve(number_of_event_types);
 }
-
-// Event manager:
-
-event_dispatcher::~event_dispatcher()
-{
-    if (parent_event_manager_)
-        parent_event_manager_->disconnect(*this);
-}
-
-void event_dispatcher::dispatch()
-{
-    event_queue_.sync();
-    event_manager_.emit(event_queue_);
-}
-
-void event_dispatcher::set_parent_event_manager(event_manager& evt_manager)
-{
-    assert(!parent_event_manager_);
-    parent_event_manager_ = &evt_manager;
-}
-
-void event_dispatcher::set_parent_event_manager(std::nullptr_t)
-{
-    assert(parent_event_manager_);
-    parent_event_manager_ = nullptr;
-}
-
-//////////
-
-async_event_queue::async_event_queue_interface::~async_event_queue_interface()
-{
-}
-
-/////
-
-void async_event_queue::sync()
-{
-    for (async_event_queue_interface_uptr& event_queue : event_queues_)
-        if (event_queue)
-            event_queue->sync();
-}
-
-void async_event_queue::emit(event_manager& evt_manager)
-{
-    for (const async_event_queue_interface_uptr& event_queue : event_queues_)
-        if (event_queue)
-            event_queue->emit(evt_manager);
-}
-
 }

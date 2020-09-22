@@ -2,6 +2,8 @@
 
 #include "event_listener.hpp"
 #include "event_manager.hpp"
+#include "async_event_queue.hpp"
+#include "event_dispatcher.hpp"
 
 namespace evnt
 {
