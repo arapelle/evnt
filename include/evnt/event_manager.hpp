@@ -84,7 +84,7 @@ public:
     }
 
     template <class event_type>
-    inline void connect(receiver_function<event_type>&& listener)
+    inline void connect(receiver_function<event_type> listener)
     {
         get_or_create_event_signal_<event_type>().connect(std::move(listener));
     }

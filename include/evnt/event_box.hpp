@@ -18,7 +18,7 @@ public:
     template <class event_type>
     inline void connect(event_manager::receiver_function<event_type> listener)
     {
-        event_manager_.connect(std::move(listener));
+        event_manager_.connect<event_type>(std::move(listener));
     }
 
     template <class event_type>
