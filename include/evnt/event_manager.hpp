@@ -13,7 +13,6 @@
 
 namespace evnt
 {
-class async_event_queue;
 class event_dispatcher;
 
 class event_manager
@@ -69,11 +68,13 @@ public:
     using receiver_function = typename event_signal<event_type>::listener_function;
 
     event_manager() {}
-
+    ~event_manager();
     event_manager(const event_manager&) = delete;
     event_manager& operator=(const event_manager&) = delete;
 
-    ~event_manager();
+    void reserve(std::size_t number_of_event_types);
+
+    // Connect:
 
     template <class event_type, class receiver_type>
     inline void connect(receiver_type& listener)
@@ -96,9 +97,12 @@ public:
         event_signal_<event_type>().disconnect(connection);
     }
 
+    // Disconnect:
+
     void disconnect(event_dispatcher& dispatcher);
 
-public:
+    // Emit events:
+
     template <class event_type>
     inline void emit(event_type& event)
     {
@@ -134,10 +138,6 @@ public:
             }
         }
     }
-
-    void emit(async_event_queue& event_queue);
-
-    void reserve(std::size_t number_of_event_types);
 
 private:
     template <class event_type>

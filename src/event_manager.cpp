@@ -13,11 +13,6 @@ event_manager::~event_manager()
     }
 }
 
-void event_manager::emit(async_event_queue& event_queue)
-{
-    event_queue.emit(*this);
-}
-
 void event_manager::connect(event_dispatcher& dispatcher)
 {
     std::lock_guard<std::mutex> lock(mutex_);

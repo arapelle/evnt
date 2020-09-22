@@ -63,30 +63,28 @@ public:
     template <class event_type>
     inline const std::vector<event_type>& events()
     {
-        return get_or_create_event_queue<event_type>().events();
+        return get_or_create_event_queue_<event_type>().events();
     }
 
     template <class event_type>
     inline void push(event_type&& event)
     {
-        get_or_create_event_queue<event_type>().push(std::move(event));
+        get_or_create_event_queue_<event_type>().push(std::move(event));
     }
 
     template <class event_type>
     void reserve(std::size_t capacity)
     {
-        get_or_create_event_queue<event_type>().reserve(capacity);
+        get_or_create_event_queue_<event_type>().reserve(capacity);
     }
 
     void sync();
+    void emit_events(event_manager& evt_manager);
+    void sync_and_emit_events(event_manager& evt_manager);
 
 private:
-    friend class event_manager;
-
-    void emit(event_manager& evt_manager);
-
     template <class event_type>
-    inline tmpl_async_event_queue<event_type>& get_or_create_event_queue()
+    inline tmpl_async_event_queue<event_type>& get_or_create_event_queue_()
     {
         std::size_t index = event_info::type_index<event_type>();
         if (index >= event_queues_.size())

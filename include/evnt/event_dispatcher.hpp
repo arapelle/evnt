@@ -16,7 +16,7 @@ public:
     }
 
     template <class event_type>
-    inline void connect(event_manager::receiver_function<event_type>&& listener)
+    inline void connect(event_manager::receiver_function<event_type> listener)
     {
         event_manager_.connect(std::move(listener));
     }
@@ -33,7 +33,6 @@ private:
     friend class event_manager;
 
     void set_parent_event_manager(event_manager& evt_manager);
-
     void set_parent_event_manager(std::nullptr_t);
 
     template <class event_type>
@@ -46,5 +45,6 @@ private:
     event_manager* parent_event_manager_ = nullptr;
     async_event_queue event_queue_;
     event_manager event_manager_;
+    std::mutex mutex_;
 };
 }
