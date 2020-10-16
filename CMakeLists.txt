@@ -15,7 +15,7 @@ set_build_type_if_undefined()
 # C++ PROJECT
 
 project(evnt
-        VERSION 0.1.0
+        VERSION 0.2
         DESCRIPTION "A C++ library providing event managing tools."
         HOMEPAGE_URL "https://github.com/arapelle/evnt"
         LANGUAGES CXX)
