@@ -137,6 +137,8 @@ public:
                     e_signal->emit(event);
             }
         }
+        for (event_type& event : events)
+            emit_to_event_boxes_(event);
     }
 
 private:
