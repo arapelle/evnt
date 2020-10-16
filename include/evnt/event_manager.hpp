@@ -141,6 +141,8 @@ public:
             emit_to_event_boxes_(event);
     }
 
+    void emit(event_box& event_box, bool pre_sync = true);
+
 private:
     template <class event_type>
     inline event_signal<event_type>& event_signal_()

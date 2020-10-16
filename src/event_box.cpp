@@ -12,11 +12,6 @@ event_box::~event_box()
     }
 }
 
-void event_box::emit_received_events()
-{
-    event_queue_.sync_and_emit_events(event_manager_);
-}
-
 void event_box::set_parent_event_manager(event_manager& evt_manager)
 {
     std::lock_guard lock(mutex_);

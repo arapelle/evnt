@@ -36,4 +36,13 @@ void event_manager::reserve(std::size_t number_of_event_types)
 {
     event_signals_.reserve(number_of_event_types);
 }
+
+void event_manager::emit(event_box& event_box, bool pre_sync)
+{
+    if (pre_sync)
+        event_box.event_queue().sync_and_emit_events(*this);
+    else
+        event_box.event_queue().emit_events(*this);
+}
+
 }
