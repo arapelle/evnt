@@ -113,7 +113,7 @@ public:
             if (event_signal_uptr)
                 static_cast<event_signal<event_type>*>(event_signal_uptr.get())->emit(event);
         }
-        emit_to_dispatchers_(event);
+        emit_to_event_boxes_(event);
     }
 
     template <class event_type>
@@ -166,7 +166,7 @@ private:
     }
 
     template <class event_type>
-    void emit_to_dispatchers_(event_type& event);
+    void emit_to_event_boxes_(event_type& event);
 
 private:
     std::vector<event_signal_interface_uptr> event_signals_;
